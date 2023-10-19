@@ -1,8 +1,5 @@
 use std::{ops::Deref, sync::Arc};
 
-use http::Request;
-use hyper::Body;
-
 use super::{filter::Filter, map::Map};
 
 pub trait Rule: Send + Sync + 'static {
@@ -17,11 +14,11 @@ impl<T> Rule for T
 where
     T: Filter + Map,
 {
-    fn matches(&self, req: &Request<Body>) -> bool {
+    fn matches(&self, req: &Self::From) -> bool {
         self.matches(req)
     }
 
-    fn map(&self, req: Request<Body>) -> Result<Request<Body>, Self::Error> {
+    fn map(&self, req: Self::From) -> Result<Self::To, Self::Error> {
         self.apply(req)
     }
 }
@@ -35,21 +32,21 @@ pub struct JustMap<M: Map> {
 }
 
 impl<T: Map> Rule for JustMap<T> {
-    fn matches(&self, _: &Request<Body>) -> bool {
+    fn matches(&self, _: &Self::From) -> bool {
         true
     }
 
-    fn map(&self, req: Request<Body>) -> Result<Request<Body>, Self::Error> {
+    fn map(&self, req: Self::From) -> Result<Self::To, Self::Error> {
         self.map.apply(req)
     }
 }
 
 impl<T: Filter> Rule for JustFilter<T> {
-    fn matches(&self, req: &Request<Body>) -> bool {
+    fn matches(&self, req: &Self::From) -> bool {
         self.filter.matches(req)
     }
 
-    fn map(&self, req: Request<Body>) -> Result<Request<Body>, Self::Error> {
+    fn map(&self, req: Self::From) -> Result<Self::To, Self::Error> {
         Ok(req)
     }
 }
@@ -76,11 +73,11 @@ impl<T> Rule for Arc<T>
 where
     T: Rule,
 {
-    fn matches(&self, req: &Request<Body>) -> bool {
+    fn matches(&self, req: &Self::From) -> bool {
         self.deref().matches(req)
     }
 
-    fn map(&self, req: Request<Body>) -> Result<Request<Body>, Self::Error> {
+    fn map(&self, req: Self::To) -> Result<Self::Error, Self::Error> {
         self.deref().map(req)
     }
 }

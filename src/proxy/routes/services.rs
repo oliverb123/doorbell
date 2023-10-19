@@ -1,6 +1,5 @@
-use std::pin::Pin;
+use std::{future::Future, pin::Pin};
 
-use futures_util::Future;
 pub trait MakeService: Send + Sync + 'static {
     type Request;
     type Response;

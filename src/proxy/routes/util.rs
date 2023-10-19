@@ -1,18 +1,4 @@
-use http::Request;
-use hyper::Body;
-
-use crate::Error;
-
-use super::{filter, map, rules::Rule, services::RouteService, Route};
-
-pub fn change_path_prefix<S: Into<String>>(from: S, to: S) -> impl Rule {
-    let from = from.into();
-    let map = stack(
-        map::strip_path(from.clone(), false),
-        map::add_prefix(to.into()),
-    );
-    stack(filter::by_path(from), map)
-}
+use super::{rules::Rule, services::RouteService, Route};
 
 pub fn stack<A, B>(first: A, second: B) -> Stack<A, B> {
     Stack {
@@ -69,11 +55,11 @@ where
     A: Rule,
     B: Rule,
 {
-    fn matches(&self, req: &Request<Body>) -> bool {
+    fn matches(&self, req: &A::From) -> bool {
         self.a.matches(req) || self.b.matches(req)
     }
 
-    fn map(&self, req: Request<Body>) -> Result<Request<Body>, Error> {
+    fn map(&self, req: A::From) -> Result<A::To, A::Error> {
         if self.a.matches(&req) {
             self.a.map(req)
         } else {
@@ -104,11 +90,11 @@ impl<A: Rule, B: Rule> Stack<A, B> {
 }
 
 impl<A: Rule, B: Rule> Rule for Stack<A, B> {
-    fn matches(&self, req: &Request<Body>) -> bool {
+    fn matches(&self, req: &Self::From) -> bool {
         self.a.matches(req) && self.b.matches(req)
     }
 
-    fn map(&self, req: Request<Body>) -> Result<Request<Body>, Error> {
+    fn map(&self, req: Self::From) -> Result<Self::To, Self::Error> {
         self.b.map(self.a.map(req)?)
     }
 }

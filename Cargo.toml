@@ -2,19 +2,3 @@
 name = "doorbell"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-
-[dependencies]
-futures-util = "0.3.28"
-http = "0.2.9"
-hyper = { version = "0.14.27", features = ["full"] }
-rustls = "0.21.7"
-rustls-pemfile = "1.0.3"
-tls-listener = { version = "0.7.0", features = ["rustls", "hyper", "hyper-h1"] }
-tokio = { version = "1.33.0", features = ["full"] }
-tokio-rustls = "0.24.1"
-tracing = "0.1.39"
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-url = "2.4.1"
